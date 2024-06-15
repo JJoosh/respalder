@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 import py7zr
 import datetime
@@ -63,8 +64,10 @@ def backup_to_7z(folder, backup_location):
                     if os.path.isfile(file_path):  # Asegurarse de que es un archivo y no un directorio
                         try:
                             archive.write(file_path, os.path.relpath(file_path, folder))
+                        except PermissionError:
+                            print(Fore.RED + f"Permiso denegado: {file_path}")
                         except KeyError as e:
-                            print(f"Error al respaldar {file_path}: {e}")
+                            print(Fore.RED + f"Error al respaldar {file_path}: {e}")
                     pbar.update(1)
 
     print(Fore.GREEN + f'Respaldo completo guardado en {backup_filename}')
