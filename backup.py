@@ -8,8 +8,16 @@ import pyfiglet
 from colorama import Fore, Style, init
 import signal
 import sys
+import ctypes
 
 init(autoreset=True)
+
+# Verificar si el script se está ejecutando con privilegios de administrador
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
 
 # Manejador de la señal SIGINT
 def signal_handler(sig, frame):
@@ -73,6 +81,12 @@ def backup_to_7z(folder, backup_location):
     print(Fore.GREEN + f'Respaldo completo guardado en {backup_filename}')
 
 if __name__ == "__main__":
+    if not is_admin():
+        print(Fore.RED + "El script necesita ejecutarse como administrador. Solicitando permisos...")
+        # Relanzar el script con permisos de administrador
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+        sys.exit(0)
+    
     display_banner()
     
     # Directorio que se desea respaldar (la raíz del sistema)
