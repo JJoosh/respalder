@@ -83,6 +83,13 @@ def should_exclude(path):
             return True
     return False
 
+def set_permissions(file_path):
+    try:
+        os.chmod(file_path, 0o777)
+    except Exception as e:
+        logging.error(f"No se pudieron establecer permisos para {file_path}: {e}")
+        print(Fore.RED + f"No se pudieron establecer permisos para {file_path}: {e}")
+
 def backup_to_7z(folder, backup_location):
     print(Fore.CYAN + "Iniciando respaldo...")
     logging.info("Iniciando respaldo...")
@@ -106,6 +113,7 @@ def backup_to_7z(folder, backup_location):
                 for filename in filenames:
                     file_path = os.path.join(foldername, filename)
                     if os.path.isfile(file_path):  # Asegurarse de que es un archivo y no un directorio
+                        set_permissions(file_path)
                         try:
                             archive.write(file_path, os.path.relpath(file_path, folder))
                         except PermissionError:
