@@ -62,6 +62,27 @@ def select_backup_location():
     root.destroy()
     return backup_location
 
+def should_exclude(path):
+    exclude_paths_windows = [
+        "C:\\Windows",
+        "C:\\Program Files",
+        "C:\\Program Files (x86)",
+        "C:\\Windows\\Temp"
+    ]
+    exclude_paths_linux = [
+        "/proc",
+        "/sys",
+        "/dev",
+        "/run",
+        "/var/tmp",
+        "/tmp"
+    ]
+    exclude_paths = exclude_paths_windows if os.name == 'nt' else exclude_paths_linux
+    for exclude in exclude_paths:
+        if path.startswith(exclude):
+            return True
+    return False
+
 def backup_to_7z(folder, backup_location):
     print(Fore.CYAN + "Iniciando respaldo...")
     logging.info("Iniciando respaldo...")
@@ -74,12 +95,14 @@ def backup_to_7z(folder, backup_location):
     backup_filename = os.path.join(backup_location, f'respaldo_{current_time}.7z')
 
     # Contar el número total de archivos para la barra de progreso
-    total_files = sum([len(files) for r, d, files in os.walk(folder)])
+    total_files = sum([len(files) for r, d, files in os.walk(folder) if not should_exclude(r)])
     
     # Crear el archivo 7z con barra de progreso
     with py7zr.SevenZipFile(backup_filename, 'w') as archive:
         with tqdm(total=total_files, unit='file', desc='Respaldo en progreso') as pbar:
             for foldername, subfolders, filenames in os.walk(folder):
+                if should_exclude(foldername):
+                    continue
                 for filename in filenames:
                     file_path = os.path.join(foldername, filename)
                     if os.path.isfile(file_path):  # Asegurarse de que es un archivo y no un directorio

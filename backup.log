@@ -1,0 +1,4 @@
+2024-06-15 15:45:36,906:ERROR:Error al solicitar permisos de superusuario: Command '['sudo', '/usr/bin/python3', './backup.py']' returned non-zero exit status 1.
+2024-06-15 15:45:52,233:ERROR:Error al solicitar permisos de superusuario: Command '['sudo', '/usr/bin/python3', './backup.py']' returned non-zero exit status 1.
+2024-06-15 15:46:21,617:INFO:Iniciando respaldo...
+2024-06-15 15:46:31,739:WARNING:Proceso de respaldo interrumpido por el usuario.
