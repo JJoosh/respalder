@@ -9,15 +9,20 @@ from colorama import Fore, Style, init
 import signal
 import sys
 import ctypes
+import platform
+import subprocess
 
 init(autoreset=True)
 
-# Verificar si el script se está ejecutando con privilegios de administrador
+# Verificar si el script se está ejecutando con privilegios de administrador (Windows) o superusuario (Linux)
 def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
+    if os.name == 'nt':
+        try:
+            return ctypes.windll.shell32.IsUserAnAdmin()
+        except:
+            return False
+    else:
+        return os.geteuid() == 0
 
 # Manejador de la señal SIGINT
 def signal_handler(sig, frame):
@@ -82,9 +87,17 @@ def backup_to_7z(folder, backup_location):
 
 if __name__ == "__main__":
     if not is_admin():
-        print(Fore.RED + "El script necesita ejecutarse como administrador. Solicitando permisos...")
-        # Relanzar el script con permisos de administrador
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+        if os.name == 'nt':
+            print(Fore.RED + "El script necesita ejecutarse como administrador. Solicitando permisos...")
+            # Relanzar el script con permisos de administrador en Windows
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+        else:
+            print(Fore.RED + "El script necesita ejecutarse como superusuario (root). Solicitando permisos...")
+            # Relanzar el script con permisos de superusuario en Linux
+            try:
+                subprocess.check_call(['sudo', sys.executable, *sys.argv])
+            except subprocess.CalledProcessError as e:
+                print(Fore.RED + f"Error al solicitar permisos de superusuario: {e}")
         sys.exit(0)
     
     display_banner()
