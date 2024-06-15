@@ -2,6 +2,7 @@
 import os
 import py7zr
 import datetime
+import logging
 from tkinter import Tk, filedialog
 from tqdm import tqdm
 import pyfiglet
@@ -13,6 +14,10 @@ import platform
 import subprocess
 
 init(autoreset=True)
+
+# Configuración del logger
+logging.basicConfig(filename='backup.log', level=logging.INFO, 
+                    format='%(asctime)s:%(levelname)s:%(message)s')
 
 # Verificar si el script se está ejecutando con privilegios de administrador (Windows) o superusuario (Linux)
 def is_admin():
@@ -26,6 +31,7 @@ def is_admin():
 
 # Manejador de la señal SIGINT
 def signal_handler(sig, frame):
+    logging.warning("Proceso de respaldo interrumpido por el usuario.")
     print(Fore.RED + "\nProceso de respaldo interrumpido. Saliendo...")
     sys.exit(0)
 
@@ -58,6 +64,8 @@ def select_backup_location():
 
 def backup_to_7z(folder, backup_location):
     print(Fore.CYAN + "Iniciando respaldo...")
+    logging.info("Iniciando respaldo...")
+
     # El folder absoluto que queremos respaldar
     folder = os.path.abspath(folder)
 
@@ -78,12 +86,15 @@ def backup_to_7z(folder, backup_location):
                         try:
                             archive.write(file_path, os.path.relpath(file_path, folder))
                         except PermissionError:
+                            logging.error(f"Permiso denegado: {file_path}")
                             print(Fore.RED + f"Permiso denegado: {file_path}")
                         except KeyError as e:
+                            logging.error(f"Error al respaldar {file_path}: {e}")
                             print(Fore.RED + f"Error al respaldar {file_path}: {e}")
                     pbar.update(1)
 
     print(Fore.GREEN + f'Respaldo completo guardado en {backup_filename}')
+    logging.info(f'Respaldo completo guardado en {backup_filename}')
 
 if __name__ == "__main__":
     if not is_admin():
@@ -97,6 +108,7 @@ if __name__ == "__main__":
             try:
                 subprocess.check_call(['sudo', sys.executable, *sys.argv])
             except subprocess.CalledProcessError as e:
+                logging.error(f"Error al solicitar permisos de superusuario: {e}")
                 print(Fore.RED + f"Error al solicitar permisos de superusuario: {e}")
         sys.exit(0)
     
@@ -112,3 +124,4 @@ if __name__ == "__main__":
         backup_to_7z(backup_folder, backup_location)
     else:
         print(Fore.RED + "No se seleccionó ningún directorio. Respaldo cancelado.")
+        logging.warning("No se seleccionó ningún directorio. Respaldo cancelado.")
